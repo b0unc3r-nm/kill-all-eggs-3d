@@ -1,0 +1,30 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+
+# Exported builds and packages
+build/
+dist/
+export/
+*.pck
+*.exe
+*.zip
+*.tar.gz
+
+# Godot export settings may contain signing credentials
+export_presets.cfg
+
+# README screenshots are documentation, not game assets
+docs/screenshots/*.import
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE / editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
