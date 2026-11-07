@@ -112,7 +112,7 @@ func _collect() -> void:
 			if is_instance_valid(game.effects):
 				game.effects.burst(game.player.global_position + Vector3(0.0, 1.0, 0.0), Color(0.9, 0.45, 0.2, 0.95), 24, 4.5, 0.7, 0.1, 9.0)
 			if is_instance_valid(game.hud):
-				game.hud.show_message("ФЕЙКОВАЯ ОПТЕШКА — ВЫПОЛЗАЕТ БОЛЬШОЙ ХЕДКРАБ!", Color(1.0, 0.55, 0.25), 3.2)
+				game.hud.show_message("ФЕЙКОВАЯ АПТЕЧКА — ВЫПОЛЗАЕТ БОЛЬШОЙ ХЕДКРАБ!", Color(1.0, 0.55, 0.25), 3.2)
 			transforms = true
 	var healed := 0
 	if not transforms and game != null and is_instance_valid(game.player) and not game.player.dead:
