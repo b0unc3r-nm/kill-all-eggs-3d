@@ -154,6 +154,7 @@ func _start_wave() -> void:
 	pending_eggs = mini(2 + wave * 2, 24 if wave < final_wave else 28)
 	max_eggs = mini(3 + wave, 9)
 	pending_aliens = 0 if wave < 2 else mini(1 + int((wave - 2) / 2), 6)
+	spawn_headcrab(_pick_boss_position(), false, Vector3.FORWARD, true)
 	alien_spawn_timer = 5.0
 	_alien_warning_shown = false
 	spawn_timer = 0.9
@@ -251,9 +252,29 @@ func _pick_egg_position() -> Vector3:
 	)
 
 
-func spawn_headcrab(position: Vector3, unborn: bool, direction: Vector3 = Vector3.ZERO) -> CharacterBody3D:
+func _pick_boss_position() -> Vector3:
+	var player_position := player.global_position if is_instance_valid(player) else Vector3.ZERO
+	for attempt in 40:
+		var candidate := Vector3(
+			_rng.randf_range(-SPAWN_HALF, SPAWN_HALF),
+			randf_range(0.25, 1.5),
+			_rng.randf_range(-SPAWN_HALF, SPAWN_HALF)
+		)
+		if Vector2(candidate.x - player_position.x, candidate.z - player_position.z).length() < 12.0:
+			continue
+		var too_close := false
+		for crab in get_tree().get_nodes_in_group("headcrabs"):
+			if Vector2(candidate.x - crab.global_position.x, candidate.z - crab.global_position.z).length() < 7.0:
+				too_close = true
+				break
+		if not too_close:
+			return candidate
+	return Vector3(_rng.randf_range(-SPAWN_HALF, SPAWN_HALF), 0.6, _rng.randf_range(-SPAWN_HALF, SPAWN_HALF))
+
+
+func spawn_headcrab(position: Vector3, unborn: bool, direction: Vector3 = Vector3.ZERO, new_boss: bool = false) -> CharacterBody3D:
 	var crab := HeadcrabScript.new()
-	crab.setup(self, unborn, wave, direction)
+	crab.setup(self, unborn, wave, direction, new_boss)
 	crab.position = position
 	add_child(crab)
 	return crab

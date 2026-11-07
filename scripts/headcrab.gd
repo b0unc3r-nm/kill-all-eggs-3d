@@ -6,6 +6,7 @@ const GRAVITY := 22.0
 
 var game: Node
 var unborn := false
+var boss := false
 var body_scale := 1.0
 var hp := 3
 var max_hp := 3
@@ -39,9 +40,10 @@ var _ground_ring_material: StandardMaterial3D
 var _ground_ring_color := Color(1.0, 0.3, 0.24, 0.26)
 
 
-func setup(new_game: Node, is_unborn: bool, wave_number: int, direction: Vector3) -> void:
+func setup(new_game: Node, is_unborn: bool, wave_number: int, direction: Vector3, new_boss: bool = false) -> void:
 	game = new_game
 	unborn = is_unborn
+	boss = new_boss
 	_launch_direction = direction.normalized() if direction.length_squared() > 0.001 else Vector3.FORWARD
 	if unborn:
 		body_scale = 0.62
@@ -57,6 +59,13 @@ func setup(new_game: Node, is_unborn: bool, wave_number: int, direction: Vector3
 		jump_force = 6.0 + minf(float(wave_number) * 0.1, 1.2)
 		contact_damage = 10 + mini(wave_number, 5)
 		score_value = 100 + wave_number * 10
+		if boss:
+			body_scale = clampf(1.15 + float(wave_number) * 0.14, 1.15, 2.2)
+			max_hp = clampi(6 + int(wave_number) * 2, 6, 20)
+			speed = 4.5 + minf(float(wave_number) * 0.25, 2.4)
+			jump_force = 8.0 + minf(float(wave_number) * 0.3, 4.0)
+			contact_damage = 14 + mini(int(wave_number) * 3, 36)
+			score_value = 150 + int(wave_number) * 25
 	hp = max_hp
 
 
@@ -146,11 +155,12 @@ func _physics_process(delta: float) -> void:
 
 	var contact_reach := 0.55 * body_scale + 0.5
 	if _attack_cooldown <= 0.0 and distance < contact_reach and absf(to_player.y) < 1.3:
-		_attack_cooldown = 0.85 if unborn else 1.0
-		_attack_anim = 0.22
+		_attack_cooldown = 0.7 if boss else 1.0
+		_attack_anim = 0.3 if boss else 0.22
 		player.take_damage(contact_damage, global_position)
-		velocity.x += direction.x * 3.0
-		velocity.z += direction.z * 3.0
+		var knockback := 6.0 if boss else 3.0
+		velocity.x += direction.x * knockback
+		velocity.z += direction.z * knockback
 
 	move_and_slide()
 	_update_visuals(delta)

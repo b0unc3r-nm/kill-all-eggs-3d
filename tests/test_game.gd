@@ -59,6 +59,11 @@ func _run_tests() -> void:
 		medkit.queue_free()
 	await get_tree().process_frame
 	await get_tree().physics_frame
+	for group_name in ["eggs", "headcrabs", "aliens", "facehuggers"]:
+		for node in get_tree().get_nodes_in_group(group_name):
+			node.queue_free()
+	await get_tree().process_frame
+	await get_tree().physics_frame
 
 	main.wave_active = false
 	main.pending_eggs = 0
@@ -436,6 +441,48 @@ func _run_tests() -> void:
 	await get_tree().physics_frame
 	main._update_wave(0.016)
 	_check(not main.wave_active, "wave completes after the last facehugger dies")
+
+	# Boss: heavy headcrab that scales with the wave and hits like a big headcrab.
+	main.wave = 3
+	main.wave_active = false
+	main.pending_eggs = 0
+	main.pending_aliens = 0
+	main.wave_clear_timer = 0.0
+	for group_name in ["eggs", "headcrabs", "aliens", "facehuggers"]:
+		for node in get_tree().get_nodes_in_group(group_name):
+			node.queue_free()
+	await get_tree().process_frame
+	await get_tree().physics_frame
+	var boss_wave: CharacterBody3D = main.spawn_headcrab(main.player.global_position + Vector3(8.0, 0.6, 0.0), false, Vector3.LEFT, true)
+	_check(boss_wave.boss, "boss headcrab is marked as a boss")
+	_check(boss_wave.body_scale > 1.0, "boss headcrab is bigger than a normal adult")
+	_check(boss_wave.max_hp > 7, "boss headcrab is tougher than a normal adult")
+	_check(boss_wave.contact_damage > 10, "boss headcrab deals heavy contact damage")
+	_check(boss_wave.jump_force > 6.0, "boss headcrab jumps like a heavy body")
+	main.wave = 10
+	var boss_final: CharacterBody3D = main.spawn_headcrab(main.player.global_position + Vector3(-8.0, 0.6, 0.0), false, Vector3.RIGHT, true)
+	_check(boss_final.max_hp > boss_wave.max_hp, "boss difficulty grows between waves")
+	_check(boss_final.contact_damage > boss_wave.contact_damage, "boss contact damage grows between waves")
+	boss_wave.queue_free()
+	boss_final.queue_free()
+	await get_tree().process_frame
+	await get_tree().physics_frame
+	main.wave = 4
+	main._start_wave()
+	var wave4_boss: CharacterBody3D = null
+	for crab in get_tree().get_nodes_in_group("headcrabs"):
+		if crab.boss:
+			wave4_boss = crab
+			break
+	_check(wave4_boss != null, "boss spawns on every wave")
+	if wave4_boss != null:
+		wave4_boss.queue_free()
+		await get_tree().process_frame
+		await get_tree().physics_frame
+	for crab in get_tree().get_nodes_in_group("headcrabs"):
+		crab.queue_free()
+	await get_tree().process_frame
+	await get_tree().physics_frame
 
 	# Final wave and victory endings.
 	_check(main.final_wave == 10, "the final wave is wave 10")
