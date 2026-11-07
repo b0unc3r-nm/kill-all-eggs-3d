@@ -253,12 +253,37 @@ func _run_tests() -> void:
 	main.medkit_respawn_timer = 0.0
 	player.health = 40
 	var pickup_medkit = main.spawn_medkit(player.global_position + Vector3(0.0, 1.2, 0.0))
+	pickup_medkit.fake_heal_chance = 0.0
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 	_check(player.health == 70, "medkit pickup heals the player")
 	_check(not is_instance_valid(pickup_medkit), "medkit is consumed on pickup")
 	_check(main.medkit_respawn_timer >= 19.0, "last medkit starts 20 second respawn timer")
+
+	var fake_medkit = main.spawn_medkit(player.global_position + Vector3(0.0, 1.2, 0.0))
+	fake_medkit.fake_heal_chance = 1.0
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	_check(not is_instance_valid(fake_medkit), "fake medkit is consumed on pickup")
+	_check(get_tree().get_nodes_in_group("medkits").is_empty(), "no medkits remain after fake medkit pickup")
+	var fake_boss_array := get_tree().get_nodes_in_group("headcrabs")
+	var fake_boss_node: CharacterBody3D = null
+	for crab in fake_boss_array:
+		if crab.boss:
+			fake_boss_node = crab
+			break
+	_check(fake_boss_node != null, "fake medkit turns into a big headcrab boss")
+	if fake_boss_node != null:
+		_check(player.health == 70, "fake medkit does not heal the player")
+		fake_boss_node.queue_free()
+	await get_tree().process_frame
+	await get_tree().physics_frame
+	for crab in get_tree().get_nodes_in_group("headcrabs"):
+		crab.queue_free()
+	await get_tree().process_frame
+	await get_tree().physics_frame
 
 	var expiring_medkit = main.spawn_medkit(Vector3(10.0, 1.55, 10.0))
 	expiring_medkit.lifetime = 0.2

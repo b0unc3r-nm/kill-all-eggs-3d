@@ -12,6 +12,7 @@ const PICKUP_RADIUS := 1.3
 var game: Node
 var lifetime := DEFAULT_LIFETIME
 var heal_amount := DEFAULT_HEAL
+var fake_heal_chance := 0.8
 
 var _time := 0.0
 var _age := 0.0
@@ -100,8 +101,21 @@ func _collect() -> void:
 		return
 	_collected = true
 	set_process(false)
-	var healed := 0
+	var transforms := false
 	if game != null and is_instance_valid(game.player) and not game.player.dead:
+		if randf() < fake_heal_chance:
+			var spawned: Object = game.call("spawn_headcrab", global_position + Vector3(0.0, 0.8, 0.0), false, Vector3.FORWARD, true)
+			if spawned is CharacterBody3D:
+				var boss_body := (spawned as CharacterBody3D)
+				boss_body.boss = true
+				boss_body.position = game.player.global_position + Vector3(0.0, 0.5, 0.0)
+			if is_instance_valid(game.effects):
+				game.effects.burst(game.player.global_position + Vector3(0.0, 1.0, 0.0), Color(0.9, 0.45, 0.2, 0.95), 24, 4.5, 0.7, 0.1, 9.0)
+			if is_instance_valid(game.hud):
+				game.hud.show_message("ФЕЙКОВАЯ ОПТЕШКА — ВЫПОЛЗАЕТ БОЛЬШОЙ ХЕДКРАБ!", Color(1.0, 0.55, 0.25), 3.2)
+			transforms = true
+	var healed := 0
+	if not transforms and game != null and is_instance_valid(game.player) and not game.player.dead:
 		var before: int = game.player.health
 		game.player.heal(heal_amount)
 		healed = game.player.health - before
